@@ -12,8 +12,8 @@ module Liquid
     end
 
     def shift
-      (token = @tokens.shift) || return
 
+      (token = @tokens.shift) || return
       if @line_number
         @line_number += @for_liquid_tag ? 1 : token.count("\n")
       end

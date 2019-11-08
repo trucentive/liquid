@@ -176,6 +176,16 @@ class RenderTagTest < Minitest::Test
                            "{% render 'product' with products[0] %}", "products" => [{ 'title' => 'Draft 151cm' }, { 'title' => 'Element 155cm' }])
   end
 
+  def test_render_tag_with_triple
+      Liquid::Template.file_system = StubFileSystem.new(
+        'product' => "Product: {{{ product.title }}} ",
+        'product_alias' => "Product: {{{ product.title }}} ",
+      )
+
+      assert_template_result("Product: Draft 151cm ",
+                             "{% render 'product' with products[0] %}", "products" => [{ 'title' => 'Draft 151cm' }, { 'title' => 'Element 155cm' }])
+    end
+
   def test_render_tag_with_alias
     Liquid::Template.file_system = StubFileSystem.new(
       'product' => "Product: {{ product.title }} ",

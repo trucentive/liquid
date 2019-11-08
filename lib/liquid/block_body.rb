@@ -4,10 +4,11 @@ module Liquid
   class BlockBody
     LiquidTagToken      = /\A\s*(\w+)\s*(.*?)\z/o
     FullToken           = /\A#{TagStart}#{WhitespaceControl}?(\s*)(\w+)(\s*)(.*?)#{WhitespaceControl}?#{TagEnd}\z/om
-    ContentOfVariable   = /\A#{VariableStart}#{WhitespaceControl}?(.*?)#{WhitespaceControl}?#{VariableEnd}\z/om
+    ContentOfVariable   = /\A#{UnSafeVariableStart}#{WhitespaceControl}?(.*?)#{WhitespaceControl}?#{UnSafeVariableEnd}\z|\A#{VariableStart}#{WhitespaceControl}?(.*?)#{WhitespaceControl}?#{VariableEnd}\z/om
     WhitespaceOrNothing = /\A\s*\z/
     TAGSTART            = "{%"
     VARSTART            = "{{"
+    VARSTART_3          = "{{{"
 
     attr_reader :nodelist
 
@@ -17,6 +18,7 @@ module Liquid
     end
 
     def parse(tokenizer, parse_context, &block)
+
       parse_context.line_number = tokenizer.line_number
 
       if tokenizer.for_liquid_tag
@@ -82,7 +84,7 @@ module Liquid
           new_tag = tag.parse(tag_name, markup, tokenizer, parse_context)
           @blank &&= new_tag.blank?
           @nodelist << new_tag
-        when token.start_with?(VARSTART)
+        when token.start_with?(VARSTART) || token.start_with?(VARSTART_3)
           whitespace_handler(token, parse_context)
           @nodelist << create_variable(token, parse_context)
           @blank = false
@@ -181,7 +183,7 @@ module Liquid
 
     def create_variable(token, parse_context)
       token.scan(ContentOfVariable) do |content|
-        markup = content.first
+        markup = content.compact.first
         return Variable.new(markup, parse_context)
       end
       raise_missing_variable_terminator(token, parse_context)
